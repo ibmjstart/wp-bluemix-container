@@ -52,7 +52,7 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		tar cf - --one-file-system -C /usr/src/wordpress . | tar xf - --no-same-owner
 		#add group write so users in root group (like www-data) can work if wordpress files are on a volume
 		#TODO consider using setguid (g+s) so that new files are added in the root group as well?
-		chmod g+w .
+		chmod -R g+w .
 
 		echo >&2 "Complete! WordPress has been successfully copied to $(pwd)"
 		if [ ! -e .htaccess ]; then
