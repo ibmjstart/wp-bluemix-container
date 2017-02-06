@@ -9,6 +9,32 @@ if [ -n "$VCAP_SERVICES_CLEARDB_0_NAME" ]; then
 	WORDPRESS_DB_NAME=${VCAP_SERVICES_CLEARDB_0_CREDENTIALS_NAME}
 fi
 
+# set the WORDPRESS env vars from the first bound Compose MySQL Service
+if [ -n "$VCAP_SERVICES_COMPOSE_FOR_MYSQL_0_CREDENTIALS_URI" ]; then
+  proto="$(echo ${VCAP_SERVICES_COMPOSE_FOR_MYSQL_0_CREDENTIALS_URI} | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+  # remove the protocol
+  url="$(echo ${VCAP_SERVICES_COMPOSE_FOR_MYSQL_0_CREDENTIALS_URI/$proto/})"
+  # extract the user and password (if any)
+  userpass="$(echo ${url} | grep @ | cut -d@ -f1)"
+  pass="$(echo ${userpass} | grep : | cut -d: -f2)"
+  if [ -n "${pass}" ]; then
+    user="$(echo ${userpass} | grep : | cut -d: -f1)"
+  else
+    user="${userpass}"
+  fi
+  # extract the host
+  host="$(echo ${url/$userpass@/} | cut -d/ -f1)"
+  # by request - try to extract the port
+  port="$(echo ${host} | sed -e 's,^.*:,:,g' -e 's,.*:\([0-9]*\).*,\1,g' -e 's,[^0-9],,g')"
+  # extract the path (if any)
+  dbname="$(echo ${url} | grep / | cut -d/ -f2-)"
+
+	WORDPRESS_DB_USER="${user}"
+	WORDPRESS_DB_PASSWORD="${pass}"
+	WORDPRESS_DB_HOST="${host}:${port}"
+	WORDPRESS_DB_NAME="${dbname}"
+fi
+
 if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 	if [ -n "$MYSQL_PORT_3306_TCP" ]; then
 		if [ -z "$WORDPRESS_DB_HOST" ]; then
