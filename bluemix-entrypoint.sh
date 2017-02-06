@@ -10,6 +10,7 @@ if [ -n "$VCAP_SERVICES_CLEARDB_0_NAME" ]; then
 fi
 
 # set the WORDPRESS env vars from the first bound Compose MySQL Service
+# See http://stackoverflow.com/questions/6174220/parse-url-in-shell-script#6174447
 if [ -n "$VCAP_SERVICES_COMPOSE_FOR_MYSQL_0_CREDENTIALS_URI" ]; then
   proto="$(echo ${VCAP_SERVICES_COMPOSE_FOR_MYSQL_0_CREDENTIALS_URI} | grep :// | sed -e's,^\(.*://\).*,\1,g')"
   # remove the protocol
